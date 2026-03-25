@@ -1,0 +1,31 @@
+{
+  "name": "dukaansync-platform",
+  "version": "1.0.0",
+  "description": "DukaanSync: Two-shop grocery inventory management system with online storefront",
+  "private": true,
+  "workspaces": [
+    "backend",
+    "admin-web",
+    "mobile",
+    "storefront",
+    "shared/*"
+  ],
+  "scripts": {
+    "dev:backend": "npm run dev --workspace=backend",
+    "dev:admin": "npm run dev --workspace=admin-web",
+    "dev:storefront": "npm run dev --workspace=storefront",
+    "dev:mobile": "npm run start --workspace=mobile",
+    "build:all": "npm run build --workspaces --if-present",
+    "test:all": "npm run test --workspaces --if-present",
+    "lint": "npm run lint --workspaces --if-present",
+    "format": "prettier --write \"**/*.{js,jsx,ts,tsx,json,md}\""
+  },
+  "devDependencies": {
+    "prettier": "^3.2.5",
+    "husky": "^9.0.11"
+  },
+  "engines": {
+    "node": ">=20.0.0",
+    "npm": ">=10.0.0"
+  }
+}

@@ -1,0 +1,352 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ===== ENUMS =====
+
+enum UserRole {
+  OWNER
+  ADMIN
+  EMPLOYEE
+}
+
+enum ProductCategory {
+  STAPLES
+  FRESH_PRODUCE
+  DAIRY
+  PACKAGED_GOODS
+  SPICES
+  PERSONAL_CARE
+  OTHER
+}
+
+enum ProductUnit {
+  KG
+  LITER
+  PIECE
+  PACKET
+}
+
+enum OrderStatus {
+  RECEIVED
+  PROCESSING
+  OUT_FOR_DELIVERY
+  DELIVERED
+  CANCELLED
+}
+
+enum PaymentStatus {
+  PENDING
+  PAID
+  FAILED
+  REFUNDED
+}
+
+enum PaymentGateway {
+  RAZORPAY
+  STRIPE
+  UPI
+  CARD
+}
+
+enum AlertType {
+  LOW_STOCK
+  EXPIRY_WARNING
+}
+
+enum AlertStatus {
+  PENDING
+  SENT
+  FAILED
+}
+
+enum AuditAction {
+  STOCK_ADD
+  STOCK_REMOVE
+  STOCK_TRANSFER
+  PRODUCT_CREATE
+  PRODUCT_UPDATE
+  PRODUCT_DELETE
+  ORDER_CREATE
+  ORDER_CANCEL
+  SUPPLIER_CREATE
+  SUPPLIER_UPDATE
+}
+
+enum AuditResourceType {
+  PRODUCT
+  STOCK
+  ORDER
+  SUPPLIER
+  USER
+  CUSTOMER
+}
+
+// ===== MODELS =====
+
+model User {
+  id            String      @id @default(uuid())
+  email         String      @unique
+  passwordHash  String
+  firstName     String
+  lastName      String
+  phone         String?
+  role          UserRole    @default(OWNER)
+  mfaSecret     String?
+  mfaEnabled    Boolean     @default(false)
+  tokenVersion  Int         @default(0)
+  lastLoginAt   DateTime?
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+
+  auditLogs     AuditLog[]
+
+  @@index([email])
+  @@index([role])
+}
+
+model Product {
+  id              String           @id @default(uuid())
+  sku             String           @unique
+  name            String
+  description     String?
+  category        ProductCategory
+  price           Decimal          @db.Decimal(10, 2)
+  unit            ProductUnit
+  imageUrls       String[]
+  isActive        Boolean          @default(true)
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+
+  stock           Stock[]
+  orderItems      OrderItem[]
+  supplierProducts SupplierProduct[]
+  alerts          Alert[]
+
+  @@index([sku])
+  @@index([name])
+  @@index([category])
+  @@index([isActive])
+}
+
+model Shop {
+  id        String   @id
+  name      String
+  createdAt DateTime @default(now())
+
+  stock     Stock[]
+  orders    Order[]
+  auditLogs AuditLog[]
+  alerts    Alert[]
+}
+
+model Stock {
+  id              String    @id @default(uuid())
+  productId       String
+  shopId          String
+  quantity        Int
+  reorderLevel    Int
+  lastRestockedAt DateTime?
+  updatedAt       DateTime  @updatedAt
+
+  product  Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+  shop     Shop    @relation(fields: [shopId], references: [id])
+
+  @@unique([productId, shopId])
+  @@index([productId])
+  @@index([shopId])
+  @@index([quantity])
+  @@index([updatedAt])
+  @@index([productId, shopId])
+}
+
+model Customer {
+  id           String    @id @default(uuid())
+  email        String    @unique
+  passwordHash String
+  firstName    String
+  lastName     String
+  phone        String
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  orders           Order[]
+  deliveryAddresses DeliveryAddress[]
+
+  @@index([email])
+  @@index([phone])
+}
+
+model DeliveryAddress {
+  id           String   @id @default(uuid())
+  customerId   String
+  addressLine1 String
+  addressLine2 String?
+  city         String
+  state        String
+  postalCode   String
+  isDefault    Boolean  @default(false)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  customer Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  orders   Order[]
+
+  @@index([customerId])
+  @@index([postalCode])
+}
+
+model Order {
+  id                          String        @id @default(uuid())
+  orderNumber                 String        @unique
+  customerId                  String
+  fulfillmentShopId           String
+  deliveryAddressId           String
+  status                      OrderStatus   @default(RECEIVED)
+  subtotal                    Decimal       @db.Decimal(10, 2)
+  tax                         Decimal       @db.Decimal(10, 2)
+  deliveryFee                 Decimal       @db.Decimal(10, 2)
+  total                       Decimal       @db.Decimal(10, 2)
+  paymentStatus               PaymentStatus @default(PENDING)
+  paymentGatewayTransactionId String?
+  notes                       String?
+  createdAt                   DateTime      @default(now())
+  paidAt                      DateTime?
+  updatedAt                   DateTime      @updatedAt
+
+  customer        Customer         @relation(fields: [customerId], references: [id])
+  fulfillmentShop Shop             @relation(fields: [fulfillmentShopId], references: [id])
+  deliveryAddress DeliveryAddress  @relation(fields: [deliveryAddressId], references: [id])
+  items           OrderItem[]
+  payment         Payment?
+
+  @@index([orderNumber])
+  @@index([customerId])
+  @@index([fulfillmentShopId])
+  @@index([status])
+  @@index([createdAt])
+  @@index([customerId, status])
+  @@index([fulfillmentShopId, status])
+}
+
+model OrderItem {
+  id           String   @id @default(uuid())
+  orderId      String
+  productId    String
+  quantity     Int
+  priceAtOrder Decimal  @db.Decimal(10, 2)
+  subtotal     Decimal  @db.Decimal(10, 2)
+  createdAt    DateTime @default(now())
+
+  order   Order   @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  product Product @relation(fields: [productId], references: [id])
+
+  @@index([orderId])
+  @@index([productId])
+}
+
+model Payment {
+  id                   String         @id @default(uuid())
+  orderId              String         @unique
+  gateway              PaymentGateway
+  gatewayTransactionId String
+  amount               Decimal        @db.Decimal(10, 2)
+  currency             String         @default("INR")
+  status               PaymentStatus  @default(PENDING)
+  failureReason        String?
+  createdAt            DateTime       @default(now())
+  completedAt          DateTime?
+
+  order Order @relation(fields: [orderId], references: [id], onDelete: Cascade)
+
+  @@index([gatewayTransactionId])
+  @@index([status])
+}
+
+model Supplier {
+  id              String    @id @default(uuid())
+  businessName    String
+  contactPerson   String
+  email           String?   @unique
+  phone           String
+  whatsappNumber  String?
+  address         String?
+  paymentTerms    String?
+  leadTimeDays    Int?
+  isActive        Boolean   @default(true)
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  supplierProducts SupplierProduct[]
+
+  @@index([businessName])
+  @@index([isActive])
+}
+
+model SupplierProduct {
+  id          String   @id @default(uuid())
+  supplierId  String
+  productId   String
+  supplierSku String?
+  costPrice   Decimal? @db.Decimal(10, 2)
+  createdAt   DateTime @default(now())
+
+  supplier Supplier @relation(fields: [supplierId], references: [id], onDelete: Cascade)
+  product  Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@unique([supplierId, productId])
+  @@index([supplierId])
+  @@index([productId])
+}
+
+model Alert {
+  id                String      @id @default(uuid())
+  productId         String
+  shopId            String
+  alertType         AlertType   @default(LOW_STOCK)
+  thresholdValue    Int
+  quantityAtTrigger Int
+  status            AlertStatus @default(PENDING)
+  emailSent         Boolean     @default(false)
+  pushSent          Boolean     @default(false)
+  triggeredAt       DateTime    @default(now())
+  sentAt            DateTime?
+  viewedByUsers     String[]
+
+  product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+  shop    Shop    @relation(fields: [shopId], references: [id])
+
+  @@index([productId])
+  @@index([shopId])
+  @@index([status])
+  @@index([triggeredAt])
+}
+
+model AuditLog {
+  id           String              @id @default(uuid())
+  userId       String
+  action       AuditAction
+  resourceType AuditResourceType
+  resourceId   String
+  shopId       String?
+  changes      Json
+  ipAddress    String?
+  userAgent    String?
+  timestamp    DateTime            @default(now())
+
+  user User  @relation(fields: [userId], references: [id])
+  shop Shop? @relation(fields: [shopId], references: [id])
+
+  @@index([userId])
+  @@index([resourceType, resourceId])
+  @@index([shopId])
+  @@index([timestamp])
+}
