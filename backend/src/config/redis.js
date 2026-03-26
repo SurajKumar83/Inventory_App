@@ -31,9 +31,9 @@ export const redisSub = new Redis(redisUrl, {
 });
 
 redis.on("error", (err) => {
-  if (!redisConnected) {
-    // Suppress repeated errors when Redis is unavailable
-    return;
+  // Suppress error logs when Redis is not configured
+  if (err.code === "ECONNREFUSED" || err.code === "ENOTFOUND") {
+    return; // Expected when Redis is not available
   }
   console.error("Redis error:", err.message);
 });
@@ -57,14 +57,11 @@ redisSub.connect().catch(() => {});
 
 // Subscribe to inventory update events (only if connected)
 redisSub
-  .subscribe("inventory:updates", (err, count) => {
-    if (err) {
-      console.error("Failed to subscribe to inventory updates:", err);
-    } else {
-      console.log(`Subscribed to ${count} channel(s)`);
-    }
-  })
-  .catch(() => {});
+  .subscribe("inventory:updates")
+  .then(() => console.log("📡 Subscribed to inventory updates"))
+  .catch(() => {
+    // Redis not available - silently fail
+  });
 
 redisSub.on("message", (channel, message) => {
   console.log(`[Redis] Received message from ${channel}:`, message);
