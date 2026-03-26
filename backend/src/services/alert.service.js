@@ -36,7 +36,7 @@ const checkLowStockAlerts = async () => {
         where: {
           productId: stock.productId,
           shopId: stock.shopId,
-          type: "LOW_STOCK",
+          alertType: "LOW_STOCK",
           triggeredAt: {
             gte: new Date(Date.now() - 24 * 60 * 60 * 1000), // Last 24 hours
           },
@@ -61,12 +61,12 @@ const checkLowStockAlerts = async () => {
       // Create alert
       const alert = await prisma.alert.create({
         data: {
-          userId: owner.id,
           productId: stock.productId,
           shopId: stock.shopId,
-          type: "LOW_STOCK",
-          message: `Low stock alert: ${stock.product.name} at ${stock.shop.name}. Current stock: ${stock.quantity} ${stock.product.unit}, reorder level: ${stock.reorderLevel} ${stock.product.unit}`,
-          severity: stock.quantity === 0 ? "HIGH" : "MEDIUM",
+          alertType: "LOW_STOCK",
+          thresholdValue: stock.reorderLevel,
+          quantityAtTrigger: stock.quantity,
+          viewedByUsers: [owner.id], // Mark as viewed by owner since system created it
         },
       });
 
@@ -118,13 +118,7 @@ const checkLowStockAlerts = async () => {
 /**
  * Get alerts with filters
  */
-const getAlerts = async ({
-  page = 1,
-  limit = 20,
-  status,
-  shopId,
-  userId,
-} = {}) => {
+const getAlerts = async ({ page = 1, limit = 20, status, shopId } = {}) => {
   const skip = (page - 1) * limit;
 
   const where = {};
@@ -133,9 +127,6 @@ const getAlerts = async ({
   }
   if (shopId) {
     where.shopId = shopId;
-  }
-  if (userId) {
-    where.userId = userId;
   }
 
   const [alerts, total] = await Promise.all([
@@ -179,7 +170,7 @@ const getAlerts = async ({
 /**
  * Mark alert as viewed
  */
-const markAlertAsViewed = async (alertId) => {
+const markAlertAsViewed = async (alertId, userId) => {
   const alert = await prisma.alert.findUnique({
     where: { id: alertId },
   });
@@ -188,11 +179,16 @@ const markAlertAsViewed = async (alertId) => {
     throw new Error("Alert not found");
   }
 
+  // Add user to viewedByUsers array if not already there
+  const viewedByUsers = alert.viewedByUsers || [];
+  if (!viewedByUsers.includes(userId)) {
+    viewedByUsers.push(userId);
+  }
+
   const updated = await prisma.alert.update({
     where: { id: alertId },
     data: {
-      status: "VIEWED",
-      viewedAt: new Date(),
+      viewedByUsers,
     },
   });
 
@@ -231,7 +227,7 @@ const generateSupplierContactMessage = async (alertId) => {
   });
 
   // Generate pre-filled message
-  const message = `Hi ${supplier.contactName || supplier.name},
+  const message = `Hi ${supplier.contactPerson || supplier.businessName},
 
 We need to reorder ${alert.product.name} (SKU: ${alert.product.sku}) for ${alert.shop.name}.
 
@@ -245,11 +241,11 @@ Thank you!`;
   return {
     supplier: {
       id: supplier.id,
-      name: supplier.name,
-      contactName: supplier.contactName,
+      businessName: supplier.businessName,
+      contactPerson: supplier.contactPerson,
       email: supplier.email,
       phone: supplier.phone,
-      whatsapp: supplier.whatsapp,
+      whatsappNumber: supplier.whatsappNumber,
     },
     message,
     product: alert.product,
@@ -263,10 +259,18 @@ Thank you!`;
  * Get unviewed alert count for a user
  */
 const getUnviewedAlertCount = async (userId) => {
+  // If no userId provided, return 0
+  if (!userId) {
+    return 0;
+  }
+
   const count = await prisma.alert.count({
     where: {
-      userId,
-      status: "ACTIVE",
+      NOT: {
+        viewedByUsers: {
+          has: userId,
+        },
+      },
     },
   });
 

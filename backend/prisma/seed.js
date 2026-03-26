@@ -55,9 +55,21 @@ async function main() {
       category: "STAPLES",
       price: 450.0,
       unit: "PACKET",
-      description: "Premium quality basmati rice",
+      description:
+        "Aromatic long-grain basmati rice sourced from premium farms. Fluffy grains when cooked, ideal for biryani and everyday meals.",
       imageUrls: ["https://via.placeholder.com/400x300?text=Basmati+Rice"],
       stock: { shop1: 50, shop2: 30, reorderLevel: 20 },
+    },
+    {
+      sku: "ATTA-001",
+      name: "Whole Wheat Atta 10kg",
+      category: "STAPLES",
+      price: 520.0,
+      unit: "PACKET",
+      description:
+        "Stone-milled whole wheat flour with high fiber and consistent texture, perfect for rotis and baking.",
+      imageUrls: ["https://via.placeholder.com/400x300?text=Atta"],
+      stock: { shop1: 40, shop2: 25, reorderLevel: 15 },
     },
     {
       sku: "MILK-001",
@@ -65,9 +77,21 @@ async function main() {
       category: "DAIRY",
       price: 65.0,
       unit: "LITER",
-      description: "Fresh full cream milk",
-      imageUrls: ["https://via.placeholder.com/400x300?text=Milk"],
+      description:
+        "Fresh full cream milk with rich taste and natural nutrients. Pasteurized and chilled for freshness.",
+      imageUrls: ["https://via.placeholder.com/400x300?text=Full+Cream+Milk"],
       stock: { shop1: 40, shop2: 25, reorderLevel: 15 },
+    },
+    {
+      sku: "YOGURT-001",
+      name: "Plain Yogurt 500g",
+      category: "DAIRY",
+      price: 80.0,
+      unit: "PACKET",
+      description:
+        "Creamy plain yogurt made from cultured milk. Great for raitas, smoothies, and cooking.",
+      imageUrls: ["https://via.placeholder.com/400x300?text=Yogurt"],
+      stock: { shop1: 35, shop2: 20, reorderLevel: 10 },
     },
     {
       sku: "TOMATO-001",
@@ -75,9 +99,21 @@ async function main() {
       category: "FRESH_PRODUCE",
       price: 40.0,
       unit: "KG",
-      description: "Fresh red tomatoes",
+      description:
+        "Fresh ripe tomatoes with vibrant color and balanced acidity, ideal for salads and cooking.",
       imageUrls: ["https://via.placeholder.com/400x300?text=Tomatoes"],
       stock: { shop1: 35, shop2: 20, reorderLevel: 10 },
+    },
+    {
+      sku: "POTATO-001",
+      name: "Potatoes",
+      category: "FRESH_PRODUCE",
+      price: 30.0,
+      unit: "KG",
+      description:
+        "Versatile potatoes for frying, boiling, and curries. Clean and sorted for quality.",
+      imageUrls: ["https://via.placeholder.com/400x300?text=Potatoes"],
+      stock: { shop1: 60, shop2: 45, reorderLevel: 20 },
     },
     {
       sku: "BREAD-001",
@@ -85,9 +121,21 @@ async function main() {
       category: "PACKAGED_GOODS",
       price: 35.0,
       unit: "PIECE",
-      description: "Fresh white bread loaf",
-      imageUrls: ["https://via.placeholder.com/400x300?text=Bread"],
+      description:
+        "Soft white bread loaf baked daily. Sliced and perfect for sandwiches and toasts.",
+      imageUrls: ["https://via.placeholder.com/400x300?text=White+Bread"],
       stock: { shop1: 60, shop2: 40, reorderLevel: 25 },
+    },
+    {
+      sku: "BISCUIT-001",
+      name: "Tea Biscuits 200g",
+      category: "PACKAGED_GOODS",
+      price: 45.0,
+      unit: "PACKET",
+      description:
+        "Crispy tea biscuits made with quality ingredients. Lightly sweet and ideal with tea or coffee.",
+      imageUrls: ["https://via.placeholder.com/400x300?text=Biscuits"],
+      stock: { shop1: 80, shop2: 60, reorderLevel: 30 },
     },
     {
       sku: "TURMERIC-001",
@@ -95,9 +143,21 @@ async function main() {
       category: "SPICES",
       price: 45.0,
       unit: "PACKET",
-      description: "Pure turmeric powder",
-      imageUrls: ["https://via.placeholder.com/400x300?text=Turmeric"],
+      description:
+        "Aromatic and pure turmeric powder, finely ground and free from additives.",
+      imageUrls: ["https://via.placeholder.com/400x300?text=Turmeric+Powder"],
       stock: { shop1: 45, shop2: 30, reorderLevel: 20 },
+    },
+    {
+      sku: "CHILI-001",
+      name: "Red Chili Powder 100g",
+      category: "SPICES",
+      price: 50.0,
+      unit: "PACKET",
+      description:
+        "Hot and flavorful red chili powder for authentic spice in recipes.",
+      imageUrls: ["https://via.placeholder.com/400x300?text=Chili+Powder"],
+      stock: { shop1: 40, shop2: 25, reorderLevel: 15 },
     },
     {
       sku: "SOAP-001",
@@ -105,9 +165,43 @@ async function main() {
       category: "PERSONAL_CARE",
       price: 25.0,
       unit: "PIECE",
-      description: "Gentle bath soap",
-      imageUrls: ["https://via.placeholder.com/400x300?text=Soap"],
+      description:
+        "Gentle bath soap with moisturizing ingredients. Suitable for daily use and all skin types.",
+      imageUrls: ["https://via.placeholder.com/400x300?text=Bath+Soap"],
       stock: { shop1: 80, shop2: 50, reorderLevel: 30 },
+    },
+    {
+      sku: "TOOTHPASTE-001",
+      name: "Mint Toothpaste 100g",
+      category: "PERSONAL_CARE",
+      price: 60.0,
+      unit: "PACKET",
+      description:
+        "Refreshing mint toothpaste for daily oral care with cavity protection.",
+      imageUrls: ["https://via.placeholder.com/400x300?text=Toothpaste"],
+      stock: { shop1: 50, shop2: 35, reorderLevel: 20 },
+    },
+    {
+      sku: "MISC-001",
+      name: "Reusable Shopping Bag",
+      category: "OTHER",
+      price: 99.0,
+      unit: "PIECE",
+      description:
+        "Durable reusable shopping bag made from recycled materials. Eco-friendly and foldable.",
+      imageUrls: ["https://via.placeholder.com/400x300?text=Shopping+Bag"],
+      stock: { shop1: 120, shop2: 80, reorderLevel: 40 },
+    },
+    {
+      sku: "BATTERY-001",
+      name: "AA Alkaline Battery (Pack of 4)",
+      category: "OTHER",
+      price: 120.0,
+      unit: "PACKET",
+      description:
+        "Reliable AA alkaline batteries for toys, remotes and household devices.",
+      imageUrls: ["https://imgs.search.brave.com/dJ2cSMNqheT1OvCVN-XYeE6bS_TdiqeAGNoZGjnxHiA/rs:fit:860:0:0:0/g:ce/aHR0cHM6Ly9tLm1l/ZGlhLWFtYXpvbi5j/b20vaW1hZ2VzL0kv/NzFiMzlYTldFY0wu/anBn"],
+      stock: { shop1: 70, shop2: 50, reorderLevel: 25 },
     },
   ];
 

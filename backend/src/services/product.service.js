@@ -105,7 +105,11 @@ export const getProductById = async (productId) => {
 };
 
 // Create new product with initial stock
-export const createProduct = async (productData, initialStock = {}) => {
+export const createProduct = async (
+  productData,
+  initialStock = {},
+  reorderLevel = 10,
+) => {
   const { sku, name, description, category, price, unit, imageUrls } =
     productData;
 
@@ -138,8 +142,8 @@ export const createProduct = async (productData, initialStock = {}) => {
         stockEntries.push({
           productId: newProduct.id,
           shopId: "shop1",
-          quantity: initialStock.shop1.quantity || 0,
-          reorderLevel: initialStock.shop1.reorderLevel || 10,
+          quantity: Number(initialStock.shop1) || 0,
+          reorderLevel: Number(reorderLevel) || 10,
         });
       }
 
@@ -147,8 +151,8 @@ export const createProduct = async (productData, initialStock = {}) => {
         stockEntries.push({
           productId: newProduct.id,
           shopId: "shop2",
-          quantity: initialStock.shop2.quantity || 0,
-          reorderLevel: initialStock.shop2.reorderLevel || 10,
+          quantity: Number(initialStock.shop2) || 0,
+          reorderLevel: Number(reorderLevel) || 10,
         });
       }
 

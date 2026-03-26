@@ -1,17 +1,17 @@
 import express from "express";
 import { body, param, query } from "express-validator";
 import {
-  cancelOrder,
-  createOrder,
-  getOrderById,
-  getOrders,
-  updateOrderStatus,
+    cancelOrder,
+    createOrder,
+    getOrderById,
+    getOrders,
+    updateOrderStatus,
 } from "../../../services/order.service.js";
 import {
-  createRazorpayOrder,
-  handlePaymentFailure,
-  handlePaymentSuccess,
-  updatePaymentWithRazorpayOrder,
+    createRazorpayOrder,
+    handlePaymentFailure,
+    handlePaymentSuccess,
+    updatePaymentWithRazorpayOrder,
 } from "../../../services/payment.service.js";
 import { authenticate, requireRole } from "../../middleware/auth.middleware.js";
 import { validate } from "../../middleware/validation.middleware.js";
@@ -57,7 +57,7 @@ router.post(
         });
       } else {
         // COD - confirm order immediately
-        await updateOrderStatus(order.id, "CONFIRMED");
+        await updateOrderStatus(order.id, "PROCESSING");
         res.status(201).json({ order, payment });
       }
     } catch (error) {
@@ -81,10 +81,9 @@ router.get(
     query("status")
       .optional()
       .isIn([
-        "PENDING",
-        "CONFIRMED",
+        "RECEIVED",
         "PROCESSING",
-        "SHIPPED",
+        "OUT_FOR_DELIVERY",
         "DELIVERED",
         "CANCELLED",
       ]),
@@ -146,10 +145,9 @@ router.patch(
     requireRole("OWNER", "ADMIN"),
     param("id").isString(),
     body("status").isIn([
-      "PENDING",
-      "CONFIRMED",
+      "RECEIVED",
       "PROCESSING",
-      "SHIPPED",
+      "OUT_FOR_DELIVERY",
       "DELIVERED",
       "CANCELLED",
     ]),

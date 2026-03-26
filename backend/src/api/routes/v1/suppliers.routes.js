@@ -1,12 +1,12 @@
 import express from "express";
 import { body, param, query } from "express-validator";
 import {
-  createSupplier,
-  deleteSupplier,
-  getAllSuppliers,
-  getSupplierById,
-  linkProducts,
-  updateSupplier,
+    createSupplier,
+    deleteSupplier,
+    getAllSuppliers,
+    getSupplierById,
+    linkProducts,
+    updateSupplier,
 } from "../../../services/supplier.service.js";
 import { authenticate, requireRole } from "../../middleware/auth.middleware.js";
 import { validate } from "../../middleware/validation.middleware.js";
@@ -63,12 +63,14 @@ router.post(
   "/",
   [
     requireRole("OWNER", "ADMIN"),
-    body("name").isString().trim().notEmpty(),
-    body("contactName").optional().isString().trim(),
+    body("businessName").isString().trim().notEmpty(),
+    body("contactPerson").isString().trim().notEmpty(),
     body("email").optional().isEmail().normalizeEmail(),
-    body("phone").optional().isString().trim(),
-    body("whatsapp").optional().isString().trim(),
+    body("phone").isString().trim().notEmpty(),
+    body("whatsappNumber").optional().isString().trim(),
     body("address").optional().isString().trim(),
+    body("paymentTerms").optional().isString().trim(),
+    body("leadTimeDays").optional().isInt({ min: 0 }),
     validate,
   ],
   async (req, res) => {
@@ -93,12 +95,14 @@ router.put(
   [
     requireRole("OWNER", "ADMIN"),
     param("id").isString(),
-    body("name").optional().isString().trim().notEmpty(),
-    body("contactName").optional().isString().trim(),
+    body("businessName").optional().isString().trim().notEmpty(),
+    body("contactPerson").optional().isString().trim(),
     body("email").optional().isEmail().normalizeEmail(),
     body("phone").optional().isString().trim(),
-    body("whatsapp").optional().isString().trim(),
+    body("whatsappNumber").optional().isString().trim(),
     body("address").optional().isString().trim(),
+    body("paymentTerms").optional().isString().trim(),
+    body("leadTimeDays").optional().isInt({ min: 0 }),
     body("isActive").optional().isBoolean(),
     validate,
   ],

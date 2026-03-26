@@ -1,6 +1,7 @@
-import { Suspense, lazy } from "react";
+import { Suspense, lazy, useEffect } from "react";
 import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
 import useAuthStore from "./store/authStore.js";
+import useThemeStore from "./store/themeStore.js";
 
 // Lazy load page components for code splitting and better initial load performance
 const Login = lazy(() => import("./pages/Login.jsx"));
@@ -13,10 +14,12 @@ const Suppliers = lazy(() => import("./pages/Suppliers.jsx"));
 // Loading fallback component
 function LoadingSpinner() {
   return (
-    <div className="flex items-center justify-center h-screen bg-gradient-to-br from-dukaan-green-50 to-white">
+    <div className="flex items-center justify-center h-screen bg-gradient-to-br from-dukaan-green-50 to-white dark:from-gray-900 dark:to-gray-800">
       <div className="text-center">
-        <div className="w-16 h-16 border-4 border-dukaan-green-200 border-t-dukaan-green-600 rounded-full animate-spin mx-auto mb-4"></div>
-        <p className="text-dukaan-green-700 font-medium text-lg">Loading...</p>
+        <div className="w-16 h-16 border-4 border-dukaan-green-200 dark:border-dukaan-green-800 border-t-dukaan-green-600 rounded-full animate-spin mx-auto mb-4"></div>
+        <p className="text-dukaan-green-700 dark:text-dukaan-green-400 font-medium text-lg">
+          Loading...
+        </p>
       </div>
     </div>
   );
@@ -29,8 +32,20 @@ function ProtectedRoute({ children }) {
 }
 
 function App() {
+  const { initializeTheme } = useThemeStore();
+
+  // Initialize theme on app mount
+  useEffect(() => {
+    initializeTheme();
+  }, [initializeTheme]);
+
   return (
-    <BrowserRouter>
+    <BrowserRouter
+      future={{
+        v7_startTransition: true,
+        v7_relativeSplatPath: true,
+      }}
+    >
       <Suspense fallback={<LoadingSpinner />}>
         <Routes>
           <Route path="/login" element={<Login />} />

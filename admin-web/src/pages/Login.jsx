@@ -55,30 +55,32 @@ export default function Login() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-md w-full">
         <div className="text-center mb-8">
-          <h1 className="text-4xl font-bold text-dukaan-green-600">
+          <h1 className="text-4xl font-bold text-dukaan-green-600 dark:text-dukaan-green-400">
             DukaanSync
           </h1>
-          <p className="mt-2 text-gray-600">Admin Dashboard</p>
+          <p className="mt-2 text-gray-600 dark:text-gray-400">
+            Admin Dashboard
+          </p>
         </div>
 
         <Card>
           {!requiresMFA ? (
             <form onSubmit={handleLogin} className="space-y-4">
-              <h2 className="text-2xl font-semibold text-gray-900 mb-4">
+              <h2 className="text-2xl font-semibold text-gray-900 dark:text-white mb-4">
                 Sign In
               </h2>
 
               {error && (
-                <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded">
+                <div className="bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-800 text-red-700 dark:text-red-400 px-4 py-3 rounded">
                   {error}
                 </div>
               )}
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                   Email
                 </label>
                 <input
@@ -88,13 +90,13 @@ export default function Login() {
                     setFormData({ ...formData, email: e.target.value })
                   }
                   required
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-dukaan-green-500 focus:border-transparent"
+                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg focus:ring-2 focus:ring-dukaan-green-500 focus:border-transparent"
                   placeholder="owner@dukaansync.com"
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                   Password
                 </label>
                 <input
@@ -112,11 +114,6 @@ export default function Login() {
               <Button type="submit" disabled={loading} className="w-full">
                 {loading ? "Signing In..." : "Sign In"}
               </Button>
-
-              <div className="mt-4 text-sm text-gray-500 text-center">
-                <p>Demo credentials:</p>
-                <p className="font-mono">owner@dukaansync.com / Password123!</p>
-              </div>
             </form>
           ) : (
             <form onSubmit={handleMFAVerify} className="space-y-4">

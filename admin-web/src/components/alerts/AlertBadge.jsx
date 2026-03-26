@@ -1,16 +1,23 @@
 import { useEffect, useState } from "react";
 import { getUnviewedAlertCount } from "../../services/alert.service.js";
+import useAuthStore from "../../store/authStore.js";
 
 export default function AlertBadge() {
   const [count, setCount] = useState(0);
+  const { isAuthenticated, accessToken } = useAuthStore();
 
   useEffect(() => {
+    // Only fetch if user is authenticated and has a token
+    if (!isAuthenticated || !accessToken) {
+      return;
+    }
+
     fetchCount();
 
     // Poll every 30 seconds to stay in sync with server
     const interval = setInterval(fetchCount, 30000);
     return () => clearInterval(interval);
-  }, []);
+  }, [isAuthenticated, accessToken]);
 
   const fetchCount = async () => {
     try {
@@ -18,6 +25,8 @@ export default function AlertBadge() {
       setCount(result.count);
     } catch (err) {
       console.error("Failed to fetch alert count:", err);
+      // Reset count on error to prevent stale data
+      setCount(0);
     }
   };
 

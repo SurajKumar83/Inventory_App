@@ -16,7 +16,7 @@ const getAllSuppliers = async ({
   const where = {};
   if (search) {
     where.OR = [
-      { name: { contains: search, mode: "insensitive" } },
+      { businessName: { contains: search, mode: "insensitive" } },
       { email: { contains: search, mode: "insensitive" } },
       { phone: { contains: search, mode: "insensitive" } },
     ];
@@ -44,7 +44,7 @@ const getAllSuppliers = async ({
           },
         },
       },
-      orderBy: { name: "asc" },
+      orderBy: { businessName: "asc" },
     }),
     prisma.supplier.count({ where }),
   ]);
@@ -86,7 +86,16 @@ const getSupplierById = async (supplierId) => {
  * Create a new supplier
  */
 const createSupplier = async (data) => {
-  const { name, contactName, email, phone, whatsapp, address } = data;
+  const {
+    businessName,
+    contactPerson,
+    email,
+    phone,
+    whatsappNumber,
+    address,
+    paymentTerms,
+    leadTimeDays,
+  } = data;
 
   // Check for duplicate email
   if (email) {
@@ -100,12 +109,14 @@ const createSupplier = async (data) => {
 
   const supplier = await prisma.supplier.create({
     data: {
-      name,
-      contactName,
+      businessName,
+      contactPerson,
       email,
       phone,
-      whatsapp,
+      whatsappNumber,
       address,
+      paymentTerms,
+      leadTimeDays,
     },
   });
 
@@ -116,7 +127,17 @@ const createSupplier = async (data) => {
  * Update a supplier
  */
 const updateSupplier = async (supplierId, data) => {
-  const { name, contactName, email, phone, whatsapp, address, isActive } = data;
+  const {
+    businessName,
+    contactPerson,
+    email,
+    phone,
+    whatsappNumber,
+    address,
+    paymentTerms,
+    leadTimeDays,
+    isActive,
+  } = data;
 
   // Check if supplier exists
   const existing = await prisma.supplier.findUnique({
@@ -140,12 +161,14 @@ const updateSupplier = async (supplierId, data) => {
   const updated = await prisma.supplier.update({
     where: { id: supplierId },
     data: {
-      name,
-      contactName,
+      businessName,
+      contactPerson,
       email,
       phone,
-      whatsapp,
+      whatsappNumber,
       address,
+      paymentTerms,
+      leadTimeDays,
       isActive,
     },
   });
@@ -224,7 +247,12 @@ const getSupplierForProduct = async (productId) => {
 };
 
 export {
-  createSupplier, deleteSupplier, getAllSuppliers,
-  getSupplierById, getSupplierForProduct, linkProducts, updateSupplier
+  createSupplier,
+  deleteSupplier,
+  getAllSuppliers,
+  getSupplierById,
+  getSupplierForProduct,
+  linkProducts,
+  updateSupplier
 };
 

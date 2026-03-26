@@ -73,7 +73,7 @@ const handlePaymentSuccess = async (
         order: {
           include: {
             customer: true,
-            orderItems: {
+            items: {
               include: {
                 product: true,
               },
@@ -98,10 +98,10 @@ const handlePaymentSuccess = async (
       },
     });
 
-    // Update order status to CONFIRMED
+    // Update order status to PROCESSING
     await tx.order.update({
       where: { id: payment.orderId },
-      data: { status: "CONFIRMED" },
+      data: { status: "PROCESSING" },
     });
 
     return { payment: updatedPayment, order: payment.order };
@@ -121,7 +121,7 @@ const handlePaymentFailure = async (razorpayOrderId, reason) => {
       include: {
         order: {
           include: {
-            orderItems: true,
+            items: true,
           },
         },
       },
@@ -142,7 +142,7 @@ const handlePaymentFailure = async (razorpayOrderId, reason) => {
 
     // Restore stock
     const order = payment.order;
-    for (const item of order.orderItems) {
+    for (const item of order.items) {
       const stock = await tx.stock.findFirst({
         where: {
           productId: item.productId,
@@ -219,6 +219,11 @@ const getPaymentByOrderId = async (orderId) => {
 };
 
 export {
-  createRazorpayOrder, getPaymentByOrderId, handlePaymentFailure, handlePaymentSuccess, updatePaymentWithRazorpayOrder, verifyPaymentSignature
+  createRazorpayOrder,
+  getPaymentByOrderId,
+  handlePaymentFailure,
+  handlePaymentSuccess,
+  updatePaymentWithRazorpayOrder,
+  verifyPaymentSignature
 };
 

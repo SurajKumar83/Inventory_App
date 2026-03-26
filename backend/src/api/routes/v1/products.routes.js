@@ -20,7 +20,7 @@ router.get(
   authenticate,
   [
     query("page").optional().isInt({ min: 1 }),
-    query("limit").optional().isInt({ min: 1, max: 100 }),
+    query("limit").optional().isInt({ min: 1, max: 1000 }),
     query("search").optional().trim(),
     query("category")
       .optional()
@@ -92,16 +92,23 @@ router.post(
       "OTHER",
     ]),
     body("price").isFloat({ min: 0 }),
-    body("unit").isIn(["KG", "LITER", "PIECE", "PACKET"]),
+    body("unit").trim().notEmpty().isLength({ min: 1, max: 20 }).toUpperCase(),
     body("imageUrls").optional().isArray(),
+    body("reorderLevel").optional().isInt({ min: 1 }),
     body("initialStock").optional().isObject(),
   ],
   validate,
   async (req, res) => {
     try {
-      const { initialStock, ...productData } = req.body;
+      // Ensure unit is uppercase for enum validation
+      const { initialStock, reorderLevel, ...productData } = req.body;
+      productData.unit = productData.unit.toUpperCase();
 
-      const product = await createProduct(productData, initialStock);
+      const product = await createProduct(
+        productData,
+        initialStock,
+        reorderLevel,
+      );
 
       res.status(201).json({
         message: "Product created successfully",
@@ -112,7 +119,13 @@ router.post(
         return res.status(409).json({ error: error.message });
       }
       console.error("Create product error:", error);
-      res.status(500).json({ error: "Failed to create product" });
+      // Return more detailed error for debugging
+      res.status(500).json({
+        error: "Failed to create product",
+        message: error.message,
+        details:
+          process.env.NODE_ENV === "development" ? error.stack : undefined,
+      });
     }
   },
 );

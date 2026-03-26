@@ -1,0 +1,128 @@
+/**
+ * Global Color System
+ *
+ * Centralized color definitions that automatically adapt to light/dark theme.
+ * Uses CSS custom properties for dynamic theme switching.
+ */
+
+:root {
+  /* ==================== Light Mode Colors (Default) ==================== */
+
+  /* Background Colors */
+  --color-bg-primary: 249 250 251; /* gray-50 */
+  --color-bg-secondary: 255 255 255; /* white */
+  --color-bg-tertiary: 243 244 246; /* gray-100 */
+  --color-bg-hover: 229 231 235; /* gray-200 */
+
+  /* Text Colors */
+  --color-text-primary: 17 24 39; /* gray-900 */
+  --color-text-secondary: 75 85 99; /* gray-600 */
+  --color-text-tertiary: 107 114 128; /* gray-500 */
+  --color-text-inverse: 255 255 255; /* white */
+
+  /* Border Colors */
+  --color-border-primary: 229 231 235; /* gray-200 */
+  --color-border-secondary: 209 213 219; /* gray-300 */
+  --color-border-focus: 5 150 105; /* dukaan-green-600 */
+
+  /* Brand Colors */
+  --color-brand-primary: 5 150 105; /* dukaan-green-600 */
+  --color-brand-secondary: 4 120 87; /* dukaan-green-700 */
+  --color-brand-light: 209 250 229; /* dukaan-green-100 */
+  --color-brand-lighter: 240 253 244; /* dukaan-green-50 */
+
+  /* Status Colors */
+  --color-success: 34 197 94; /* green-500 */
+  --color-success-bg: 240 253 244; /* green-50 */
+  --color-warning: 234 179 8; /* yellow-500 */
+  --color-warning-bg: 254 252 232; /* yellow-50 */
+  --color-danger: 239 68 68; /* red-500 */
+  --color-danger-bg: 254 242 242; /* red-50 */
+  --color-info: 59 130 246; /* blue-500 */
+  --color-info-bg: 239 246 255; /* blue-50 */
+
+  /* Component-Specific Colors */
+  --color-card-bg: 255 255 255; /* white */
+  --color-card-shadow: 0 0 0 / 0.05;
+  --color-sidebar-bg: 255 255 255; /* white */
+  --color-header-bg: 255 255 255; /* white */
+  --color-input-bg: 255 255 255; /* white */
+  --color-button-hover: 229 231 235; /* gray-200 */
+}
+
+.dark {
+  /* ==================== Dark Mode Colors ==================== */
+
+  /* Background Colors */
+  --color-bg-primary: 17 24 39; /* gray-900 */
+  --color-bg-secondary: 31 41 55; /* gray-800 */
+  --color-bg-tertiary: 55 65 81; /* gray-700 */
+  --color-bg-hover: 75 85 99; /* gray-600 */
+
+  /* Text Colors */
+  --color-text-primary: 243 244 246; /* gray-100 */
+  --color-text-secondary: 209 213 219; /* gray-300 */
+  --color-text-tertiary: 156 163 175; /* gray-400 */
+  --color-text-inverse: 17 24 39; /* gray-900 */
+
+  /* Border Colors */
+  --color-border-primary: 55 65 81; /* gray-700 */
+  --color-border-secondary: 75 85 99; /* gray-600 */
+  --color-border-focus: 5 150 105; /* dukaan-green-600 */
+
+  /* Brand Colors */
+  --color-brand-primary: 16 185 129; /* green-500 - brighter for dark mode */
+  --color-brand-secondary: 5 150 105; /* dukaan-green-600 */
+  --color-brand-light: 6 78 59; /* green-900 */
+  --color-brand-lighter: 20 83 45; /* green-800 */
+
+  /* Status Colors */
+  --color-success: 34 197 94; /* green-500 */
+  --color-success-bg: 20 83 45; /* green-800 */
+  --color-warning: 234 179 8; /* yellow-500 */
+  --color-warning-bg: 113 63 18; /* yellow-800 */
+  --color-danger: 239 68 68; /* red-500 */
+  --color-danger-bg: 127 29 29; /* red-800 */
+  --color-info: 59 130 246; /* blue-500 */
+  --color-info-bg: 30 58 138; /* blue-800 */
+
+  /* Component-Specific Colors */
+  --color-card-bg: 31 41 55; /* gray-800 */
+  --color-card-shadow: 0 0 0 / 0.3;
+  --color-sidebar-bg: 31 41 55; /* gray-800 */
+  --color-header-bg: 31 41 55; /* gray-800 */
+  --color-input-bg: 55 65 81; /* gray-700 */
+  --color-button-hover: 75 85 99; /* gray-600 */
+}
+
+/* ==================== Utility Classes (Optional) ==================== */
+/* You can use these classes directly or use Tailwind's arbitrary values */
+
+.bg-primary {
+  background-color: rgb(var(--color-bg-primary));
+}
+
+.bg-secondary {
+  background-color: rgb(var(--color-bg-secondary));
+}
+
+.text-primary {
+  color: rgb(var(--color-text-primary));
+}
+
+.text-secondary {
+  color: rgb(var(--color-text-secondary));
+}
+
+.border-primary {
+  border-color: rgb(var(--color-border-primary));
+}
+
+.btn-brand {
+  background-color: rgb(var(--color-brand-primary));
+  color: rgb(var(--color-text-inverse));
+}
+
+.btn-brand:hover {
+  background-color: rgb(var(--color-brand-secondary));
+}

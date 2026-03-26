@@ -220,4 +220,64 @@ Shop owner opens the admin dashboard to a full-screen interface with clean white
 
 ---
 
+## Implementation Components
+
+### AddProductForm - Product Creation Modal (US1 Enabler)
+
+**Purpose**: Enable shop owners to manually add new products to inventory through an intuitive modal form in the admin dashboard.
+
+**User Story**: Supports User Story 1 (Multi-Location Inventory Management) by enabling product creation workflow.
+
+**Component Path**: `admin-web/src/components/inventory/AddProductForm.jsx`
+
+**Features**:
+
+- Modal-based form triggered by "Add New Product" button in Inventory page header
+- 10 form fields: SKU, Name, Category, Description, Unit, Price, Image URLs, Reorder Level, Shop 1 Stock, Shop 2 Stock
+- Client-side validation for all fields with real-time error feedback
+- Server-side integration with POST /api/v1/products endpoint
+- Duplicate SKU prevention with 409 conflict error handling
+- Image URL multi-input with add/remove capabilities
+- Category dropdown: Staples, Fresh Produce, Dairy, Packaged Goods, Spices & Condiments, Personal Care
+- Loading state during form submission
+- Success message display with auto-close modal
+- Responsive design (mobile, tablet, desktop)
+- Keyboard accessibility and touch-optimized UI
+
+**Acceptance Criteria**:
+
+- [ ] Form displays all 10 fields with proper labels and validation
+- [ ] SKU uniqueness validation prevents duplicate products
+- [ ] Product successfully created in database with stock records for both shops
+- [ ] Product appears immediately in inventory grid after creation
+- [ ] Success message displays for 3 seconds before modal closes
+- [ ] Form validation prevents invalid data submission (required fields, numeric validation, etc.)
+- [ ] Error messages display for API errors (4xx, 5xx responses)
+- [ ] Form is fully functional on mobile (375px), tablet (768px), and desktop (1920px+)
+- [ ] No console errors or warnings
+- [ ] Accessible keyboard navigation (Tab, Escape to close)
+
+**API Integration**: Uses existing `POST /api/v1/products` endpoint. Request payload includes:
+
+```json
+{
+  "sku": "string (required, unique)",
+  "name": "string (required)",
+  "category": "enum (required)",
+  "description": "string (optional)",
+  "unit": "string (required)",
+  "price": "number (required, > 0)",
+  "imageUrls": ["string array (optional)"],
+  "initialStock": {
+    "shop1": "number (required, >= 0)",
+    "shop2": "number (required, >= 0)"
+  },
+  "reorderLevel": "number (required, >= 1)"
+}
+```
+
+**Status**: ✅ Component Created & Integrated | ⏳ Testing Ready
+
+---
+
 _End of Specification_

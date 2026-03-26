@@ -5,6 +5,32 @@
     <link rel="icon" type="image/svg+xml" href="/vite.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>DukaanSync Admin</title>
+    <!-- Theme initialization script - runs before React loads -->
+    <script>
+      (function() {
+        try {
+          const stored = localStorage.getItem('theme-storage');
+          let theme = 'light';
+
+          if (stored) {
+            const parsed = JSON.parse(stored);
+            theme = parsed.state?.theme || 'light';
+          } else {
+            // Check system preference
+            if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
+              theme = 'dark';
+            }
+          }
+
+          // Apply theme immediately
+          if (theme === 'dark') {
+            document.documentElement.classList.add('dark');
+          }
+        } catch (e) {
+          console.error('Error initializing theme:', e);
+        }
+      })();
+    </script>
   </head>
   <body>
     <div id="root"></div>

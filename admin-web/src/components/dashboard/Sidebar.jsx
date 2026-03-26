@@ -14,10 +14,14 @@ export default function Sidebar() {
   ];
 
   return (
-    <aside className="bg-white shadow-md w-64 min-h-screen p-4">
+    <aside className="bg-white dark:bg-gray-800 shadow-md w-64 min-h-screen p-4">
       <div className="mb-8">
-        <h2 className="text-2xl font-bold text-dukaan-green-600">DukaanSync</h2>
-        <p className="text-sm text-gray-600 mt-1">Admin Portal</p>
+        <h2 className="text-2xl font-bold text-dukaan-green-600 dark:text-dukaan-green-400">
+          DukaanSync
+        </h2>
+        <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
+          Admin Portal
+        </p>
       </div>
 
       <nav className="space-y-2">
@@ -29,8 +33,8 @@ export default function Sidebar() {
               onClick={() => navigate(item.path)}
               className={`w-full flex items-center justify-between px-4 py-3 rounded-lg font-semibold transition-colors ${
                 isActive
-                  ? "bg-dukaan-green-600 text-white"
-                  : "text-gray-700 hover:bg-gray-100"
+                  ? "bg-dukaan-green-600 text-white dark:bg-dukaan-green-700"
+                  : "text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
               }`}
             >
               <div className="flex items-center gap-3">
