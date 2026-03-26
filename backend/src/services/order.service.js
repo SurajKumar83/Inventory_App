@@ -84,9 +84,9 @@ const createOrder = async (data) => {
         tax,
         deliveryFee,
         total,
-        status: "PENDING",
+        status: "RECEIVED",
         notes,
-        orderItems: {
+        items: {
           create: items.map((item) => ({
             productId: item.productId,
             quantity: item.quantity,
@@ -96,7 +96,7 @@ const createOrder = async (data) => {
         },
       },
       include: {
-        orderItems: {
+        items: {
           include: {
             product: true,
           },
@@ -181,7 +181,7 @@ const getOrders = async ({ page = 1, limit = 20, customerId, status } = {}) => {
       skip,
       take: limit,
       include: {
-        orderItems: {
+        items: {
           include: {
             product: {
               select: {
@@ -209,7 +209,7 @@ const getOrders = async ({ page = 1, limit = 20, customerId, status } = {}) => {
             name: true,
           },
         },
-        payments: true,
+        payment: true,
       },
       orderBy: { createdAt: "desc" },
     }),
@@ -234,7 +234,7 @@ const getOrderById = async (orderId) => {
   const order = await prisma.order.findUnique({
     where: { id: orderId },
     include: {
-      orderItems: {
+      items: {
         include: {
           product: true,
         },
@@ -242,7 +242,7 @@ const getOrderById = async (orderId) => {
       customer: true,
       deliveryAddress: true,
       fulfillmentShop: true,
-      payments: true,
+      payment: true,
     },
   });
 
@@ -258,10 +258,9 @@ const getOrderById = async (orderId) => {
  */
 const updateOrderStatus = async (orderId, status) => {
   const validStatuses = [
-    "PENDING",
-    "CONFIRMED",
+    "RECEIVED",
     "PROCESSING",
-    "SHIPPED",
+    "OUT_FOR_DELIVERY",
     "DELIVERED",
     "CANCELLED",
   ];
@@ -274,7 +273,7 @@ const updateOrderStatus = async (orderId, status) => {
     where: { id: orderId },
     include: {
       customer: true,
-      orderItems: {
+      items: {
         include: {
           product: true,
         },
@@ -287,13 +286,13 @@ const updateOrderStatus = async (orderId, status) => {
     throw new Error("Order not found");
   }
 
-  // Send confirmation email when order is confirmed
-  if (status === "CONFIRMED" && order.status === "PENDING") {
+  // Send confirmation email when order is being processed
+  if (status === "PROCESSING" && order.status === "RECEIVED") {
     try {
       await sendOrderConfirmationEmail(
         order.customer.email,
         order,
-        order.orderItems,
+        order.items,
         order.deliveryAddress,
       );
     } catch (emailError) {
@@ -317,7 +316,7 @@ const cancelOrder = async (orderId) => {
     const order = await tx.order.findUnique({
       where: { id: orderId },
       include: {
-        orderItems: true,
+        items: true,
       },
     });
 
@@ -325,12 +324,12 @@ const cancelOrder = async (orderId) => {
       throw new Error("Order not found");
     }
 
-    if (!["PENDING", "CONFIRMED"].includes(order.status)) {
+    if (!["RECEIVED", "PROCESSING"].includes(order.status)) {
       throw new Error("Cannot cancel order in current status");
     }
 
     // Restore stock
-    for (const item of order.orderItems) {
+    for (const item of order.items) {
       const stock = await tx.stock.findFirst({
         where: {
           productId: item.productId,
@@ -384,4 +383,3 @@ const cancelOrder = async (orderId) => {
 };
 
 export { cancelOrder, createOrder, getOrderById, getOrders, updateOrderStatus };
-

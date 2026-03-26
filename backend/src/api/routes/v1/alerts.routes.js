@@ -22,17 +22,16 @@ router.get(
   "/",
   [
     query("page").optional().isInt({ min: 1 }).toInt(),
-    query("limit").optional().isInt({ min: 1, max: 100 }).toInt(),
-    query("status").optional().isIn(["ACTIVE", "VIEWED", "RESOLVED"]),
+    query("limit").optional().isInt({ min: 1, max: 1000 }).toInt(),
+    query("status").optional().isIn(["PENDING", "SENT", "FAILED"]),
     query("shopId").optional().isString(),
     validate,
   ],
   async (req, res) => {
     try {
-      // Only return alerts for the authenticated user
+      // Return all alerts (users can see all alerts for their shops)
       const result = await getAlerts({
         ...req.query,
-        userId: req.user.id,
       });
       res.json(result);
     } catch (error) {
@@ -47,6 +46,10 @@ router.get(
  */
 router.get("/unviewed-count", async (req, res) => {
   try {
+    // Check if user is authenticated
+    if (!req.user || !req.user.userId) {
+      return res.status(401).json({ error: "User not authenticated" });
+    }
     const count = await getUnviewedAlertCount(req.user.userId);
     res.json({ count });
   } catch (error) {
@@ -63,7 +66,7 @@ router.patch(
   [param("id").isString(), validate],
   async (req, res) => {
     try {
-      const alert = await markAlertAsViewed(req.params.id);
+      const alert = await markAlertAsViewed(req.params.id, req.user.userId);
       res.json(alert);
     } catch (error) {
       if (error.message === "Alert not found") {

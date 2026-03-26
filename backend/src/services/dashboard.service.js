@@ -11,18 +11,7 @@ export const getDashboardStats = async () => {
     });
 
     // Get low-stock products count (below reorder level)
-    const lowStockCount = await prisma.stock.count({
-      where: {
-        quantity: {
-          lte: prisma.raw("reorderLevel"),
-        },
-        product: {
-          isActive: true,
-        },
-      },
-    });
-
-    // Alternative approach for low-stock count (more reliable)
+    // Fetch all stock items and filter in JavaScript (Prisma doesn't support field-to-field comparison)
     const stockItems = await prisma.stock.findMany({
       where: {
         product: {
@@ -46,75 +35,94 @@ export const getDashboardStats = async () => {
     const endOfDay = new Date();
     endOfDay.setHours(23, 59, 59, 999);
 
-    const todayOrders = await prisma.order.findMany({
-      where: {
-        createdAt: {
-          gte: startOfDay,
-          lte: endOfDay,
+    const todayOrders = await prisma.order
+      .findMany({
+        where: {
+          createdAt: {
+            gte: startOfDay,
+            lte: endOfDay,
+          },
+          status: {
+            in: ["PROCESSING", "OUT_FOR_DELIVERY", "DELIVERED"],
+          },
         },
-        status: {
-          in: ["CONFIRMED", "PROCESSING", "SHIPPED", "DELIVERED"],
+        select: {
+          total: true,
         },
-      },
-      select: {
-        total: true,
-      },
-    });
+      })
+      .catch((err) => {
+        console.error("Error fetching today's orders:", err);
+        return [];
+      });
 
     const todaysSales = todayOrders.reduce(
-      (sum, order) => sum + order.total,
+      (sum, order) => sum + Number(order.total),
       0,
     );
     const todaysOrderCount = todayOrders.length;
 
     // Get pending orders count
-    const pendingOrdersCount = await prisma.order.count({
-      where: {
-        status: "PENDING",
-      },
-    });
+    const pendingOrdersCount = await prisma.order
+      .count({
+        where: {
+          status: "RECEIVED",
+        },
+      })
+      .catch((err) => {
+        console.error("Error counting pending orders:", err);
+        return 0;
+      });
 
-    // Get active alerts count
-    const activeAlertsCount = await prisma.alert.count({
-      where: {
-        status: "ACTIVE",
-      },
-    });
+    // Get active alerts count (PENDING status = not yet sent)
+    const activeAlertsCount = await prisma.alert
+      .count({
+        where: {
+          status: "PENDING",
+        },
+      })
+      .catch((err) => {
+        console.error("Error counting alerts:", err);
+        return 0;
+      });
 
     // Get total shops
-    const totalShops = await prisma.shop.count({
-      where: { isActive: true },
-    });
+    const totalShops = await prisma.shop.count();
 
     // Get total suppliers
-    const totalSuppliers = await prisma.supplier.count();
+    const totalSuppliers = await prisma.supplier.count().catch(() => 0);
 
     // Get total customers
     const totalCustomers = await prisma.customer.count();
 
     // Recent orders (last 5)
-    const recentOrders = await prisma.order.findMany({
-      take: 5,
-      orderBy: { createdAt: "desc" },
-      include: {
-        customer: {
-          select: {
-            name: true,
-            email: true,
+    const recentOrders = await prisma.order
+      .findMany({
+        take: 5,
+        orderBy: { createdAt: "desc" },
+        include: {
+          customer: {
+            select: {
+              firstName: true,
+              lastName: true,
+              email: true,
+            },
           },
-        },
-        items: {
-          select: {
-            quantity: true,
-            product: {
-              select: {
-                name: true,
+          items: {
+            select: {
+              quantity: true,
+              product: {
+                select: {
+                  name: true,
+                },
               },
             },
           },
         },
-      },
-    });
+      })
+      .catch((err) => {
+        console.error("Error fetching recent orders:", err);
+        return [];
+      });
 
     return {
       totalProducts,
@@ -129,7 +137,7 @@ export const getDashboardStats = async () => {
       recentOrders: recentOrders.map((order) => ({
         id: order.id,
         orderNumber: order.orderNumber,
-        customerName: order.customer.name,
+        customerName: `${order.customer.firstName} ${order.customer.lastName}`,
         customerEmail: order.customer.email,
         status: order.status,
         total: Number(order.total.toFixed(2)),
@@ -139,6 +147,8 @@ export const getDashboardStats = async () => {
     };
   } catch (error) {
     console.error("Error calculating dashboard stats:", error);
+    console.error("Error details:", error.message);
+    console.error("Error stack:", error.stack);
     throw error;
   }
 };

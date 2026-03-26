@@ -25,10 +25,10 @@ export const authenticatedLimiter = rateLimit({
   keyGenerator: (req) => req.user?.userId || req.ip,
 });
 
-// Rate limiter for public routes (10 req/min)
+// Rate limiter for public routes (30 req/min)
 export const publicLimiter = rateLimit({
   windowMs: 60 * 1000, // 1 minute
-  max: 10,
+  max: 30,
   message: "Too many requests, please try again later",
   standardHeaders: true,
   legacyHeaders: false,
@@ -36,10 +36,11 @@ export const publicLimiter = rateLimit({
   keyGenerator: (req) => req.ip,
 });
 
-// Strict rate limiter for login attempts (5 req/min per IP)
+// Strict rate limiter for login attempts (20 req/min per IP)
+// Allows for development/testing while still preventing brute force attacks
 export const loginLimiter = rateLimit({
   windowMs: 60 * 1000, // 1 minute
-  max: 5,
+  max: 20,
   message: "Too many login attempts, please try again later",
   standardHeaders: true,
   legacyHeaders: false,

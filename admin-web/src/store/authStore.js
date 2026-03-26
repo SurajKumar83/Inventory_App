@@ -68,6 +68,26 @@ const useAuthStore = create(
         user: state.user,
         isAuthenticated: state.isAuthenticated,
       }),
+      onRehydrateStorage: () => (state) => {
+        // After rehydration, restore tokens from localStorage
+        if (state?.isAuthenticated) {
+          const accessToken = localStorage.getItem("accessToken");
+          const refreshToken = localStorage.getItem("refreshToken");
+
+          if (accessToken && refreshToken) {
+            state.accessToken = accessToken;
+            state.refreshToken = refreshToken;
+          } else {
+            // Tokens missing but user marked as authenticated - clear auth state
+            state.isAuthenticated = false;
+            state.user = null;
+          }
+        } else {
+          console.log(
+            "[Auth Store] Not authenticated - skipping token restoration",
+          );
+        }
+      },
     },
   ),
 );

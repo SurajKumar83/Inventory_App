@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Theme Test</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+    }
+  </script>
+</head>
+<body class="bg-white dark:bg-gray-900">
+  <div class="min-h-screen p-8">
+    <h1 class="text-3xl font-bold text-gray-900 dark:text-white mb-4">Theme Test</h1>
+    <p class="text-gray-600 dark:text-gray-400 mb-4">If you see this text change color when toggling, dark mode works!</p>
+    
+    <button 
+      onclick="toggleTheme()" 
+      class="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
+    >
+      Toggle Theme
+    </button>
+
+    <div class="mt-4 p-4 bg-gray-100 dark:bg-gray-800 rounded">
+      <p class="text-gray-900 dark:text-white">Current HTML classes: <span id="classes"></span></p>
+      <p class="text-gray-900 dark:text-white">localStorage: <span id="storage"></span></p>
+    </div>
+  </div>
+
+  <script>
+    function updateDisplay() {
+      document.getElementById('classes').textContent = document.documentElement.className || 'none';
+      document.getElementById('storage').textContent = localStorage.getItem('theme') || 'none';
+    }
+
+    function toggleTheme() {
+      const html = document.documentElement;
+      const isDark = html.classList.contains('dark');
+      
+      if (isDark) {
+        html.classList.remove('dark');
+        localStorage.setItem('theme', 'light');
+      } else {
+        html.classList.add('dark');
+        localStorage.setItem('theme', 'dark');
+      }
+      
+      updateDisplay();
+    }
+
+    // Initialize
+    const savedTheme = localStorage.getItem('theme');
+    if (savedTheme === 'dark') {
+      document.documentElement.classList.add('dark');
+    }
+    updateDisplay();
+  </script>
+</body>
+</html>

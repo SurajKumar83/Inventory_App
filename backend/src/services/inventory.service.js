@@ -1,5 +1,14 @@
 import prisma from "../config/database.js";
-import { redisPub } from "../config/redis.js";
+import redis, { redisPub } from "../config/redis.js";
+
+// Helper to invalidate product cache when stock changes
+const invalidateProductCache = async () => {
+  const pattern = "products:catalog:*";
+  const keys = await redis.keys(pattern);
+  if (keys.length > 0) {
+    await redis.del(...keys);
+  }
+};
 
 // Adjust stock (add or remove)
 export const adjustStock = async (data, userId) => {
@@ -11,13 +20,70 @@ export const adjustStock = async (data, userId) => {
 
   const result = await prisma.$transaction(async (tx) => {
     // Get current stock with row-level locking
-    const stock = await tx.stock.findUnique({
+    let stock = await tx.stock.findUnique({
       where: { productId_shopId: { productId, shopId } },
       include: { product: true, shop: true },
     });
 
+    // If stock record doesn't exist, handle based on operation type
     if (!stock) {
-      throw new Error("Stock record not found");
+      // Can't remove stock that doesn't exist
+      if (quantity < 0) {
+        throw new Error(
+          "Cannot remove stock. No stock record exists for this product at the specified shop.",
+        );
+      }
+
+      // For adding stock, create a new stock record
+      // First verify product and shop exist
+      const product = await tx.product.findUnique({
+        where: { id: productId },
+      });
+
+      if (!product) {
+        throw new Error("Product not found");
+      }
+
+      const shop = await tx.shop.findUnique({
+        where: { id: shopId },
+      });
+
+      if (!shop) {
+        throw new Error("Shop not found");
+      }
+
+      // Create the stock record with initial quantity
+      stock = await tx.stock.create({
+        data: {
+          productId,
+          shopId,
+          quantity,
+          reorderLevel: 10, // Default reorder level
+          lastRestockedAt: new Date(),
+        },
+        include: { product: true, shop: true },
+      });
+
+      // Create audit log for initial stock creation
+      await tx.auditLog.create({
+        data: {
+          userId,
+          action: "STOCK_ADD",
+          resourceType: "STOCK",
+          resourceId: stock.id,
+          shopId,
+          changes: {
+            product: product.name,
+            shop: shop.name,
+            quantityBefore: 0,
+            quantityAfter: quantity,
+            adjustment: quantity,
+            reason: reason || "Initial stock creation",
+          },
+        },
+      });
+
+      return { stock, product, shop };
     }
 
     const newQuantity = stock.quantity + quantity;
@@ -70,6 +136,9 @@ export const adjustStock = async (data, userId) => {
       timestamp: new Date().toISOString(),
     }),
   );
+
+  // Invalidate product cache to ensure fresh data
+  await invalidateProductCache();
 
   return result;
 };
@@ -167,6 +236,9 @@ export const transferStock = async (data, userId) => {
       }),
     ),
   ]);
+
+  // Invalidate product cache to ensure fresh data
+  await invalidateProductCache();
 
   return result;
 };
