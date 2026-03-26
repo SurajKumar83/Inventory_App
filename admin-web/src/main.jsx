@@ -1,10 +1,7 @@
-import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 import App from "./App.jsx";
 import "./index.css";
 
-createRoot(document.getElementById("root")).render(
-  <StrictMode>
-    <App />
-  </StrictMode>,
-);
+// Note: StrictMode removed to prevent double-mounting in development
+// which causes duplicate API calls and Prisma queries
+createRoot(document.getElementById("root")).render(<App />);
