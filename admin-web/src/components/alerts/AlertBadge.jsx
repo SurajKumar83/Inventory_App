@@ -14,8 +14,8 @@ export default function AlertBadge() {
 
     fetchCount();
 
-    // Poll every 30 seconds to stay in sync with server
-    const interval = setInterval(fetchCount, 30000);
+    // Poll every 60 seconds to stay in sync with server (reduced from 30s)
+    const interval = setInterval(fetchCount, 60000);
     return () => clearInterval(interval);
   }, [isAuthenticated, accessToken]);
 

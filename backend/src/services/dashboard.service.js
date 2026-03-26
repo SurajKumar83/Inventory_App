@@ -1,10 +1,30 @@
 import prisma from "../config/database.js";
+import { redis } from "../config/redis.js";
+
+const CACHE_KEY = "dashboard:stats";
+const CACHE_TTL = 30; // 30 seconds cache to reduce database load
 
 /**
  * Calculate dashboard metrics for admin overview
+ * Uses Redis caching to minimize database queries
  */
 export const getDashboardStats = async () => {
   try {
+    // Try to get cached data first
+    try {
+      const cached = await redis.get(CACHE_KEY);
+      if (cached) {
+        console.log("📊 Dashboard stats served from cache");
+        return JSON.parse(cached);
+      }
+    } catch (cacheError) {
+      // If Redis is down, continue without cache
+      console.warn(
+        "Cache unavailable, fetching fresh data:",
+        cacheError.message,
+      );
+    }
+
     // Get total products count
     const totalProducts = await prisma.product.count({
       where: { isActive: true },
@@ -124,7 +144,7 @@ export const getDashboardStats = async () => {
         return [];
       });
 
-    return {
+    const result = {
       totalProducts,
       lowStockCount: lowStockItems,
       todaysSales: Number(todaysSales.toFixed(2)),
@@ -145,10 +165,33 @@ export const getDashboardStats = async () => {
         createdAt: order.createdAt,
       })),
     };
+
+    // Cache the result for 30 seconds
+    try {
+      await redis.setex(CACHE_KEY, CACHE_TTL, JSON.stringify(result));
+      console.log("📊 Dashboard stats cached for", CACHE_TTL, "seconds");
+    } catch (cacheError) {
+      console.warn("Failed to cache dashboard stats:", cacheError.message);
+    }
+
+    return result;
   } catch (error) {
     console.error("Error calculating dashboard stats:", error);
     console.error("Error details:", error.message);
     console.error("Error stack:", error.stack);
     throw error;
+  }
+};
+
+/**
+ * Invalidate dashboard cache
+ * Call this when inventory, orders, or alerts are updated
+ */
+export const invalidateDashboardCache = async () => {
+  try {
+    await redis.del(CACHE_KEY);
+    console.log("🔄 Dashboard cache invalidated");
+  } catch (error) {
+    console.warn("Failed to invalidate dashboard cache:", error.message);
   }
 };

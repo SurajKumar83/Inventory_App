@@ -1,8 +1,11 @@
 import { PrismaClient } from "@prisma/client";
+import { redis } from "../config/redis.js";
 import { sendLowStockAlertEmail } from "./email.service.js";
 import { sendLowStockAlertPush } from "./pushNotification.service.js";
 import { getSupplierForProduct } from "./supplier.service.js";
 const prisma = new PrismaClient();
+
+const ALERT_COUNT_CACHE_TTL = 30; // 30 seconds cache for alert count
 
 /**
  * Check all products for low stock and create alerts
@@ -106,6 +109,16 @@ const checkLowStockAlerts = async () => {
 
     if (alertsCreated.length > 0) {
       console.log(`Created ${alertsCreated.length} low-stock alerts`);
+
+      // Invalidate alert count cache for all users since new alerts were created
+      try {
+        const allUsers = await prisma.user.findMany({ select: { id: true } });
+        for (const user of allUsers) {
+          await invalidateAlertCountCache(user.id);
+        }
+      } catch (cacheError) {
+        console.warn("Failed to invalidate alert caches:", cacheError.message);
+      }
     }
 
     return alertsCreated;
@@ -192,6 +205,9 @@ const markAlertAsViewed = async (alertId, userId) => {
     },
   });
 
+  // Invalidate alert count cache for this user
+  await invalidateAlertCountCache(userId);
+
   return updated;
 };
 
@@ -257,6 +273,7 @@ Thank you!`;
 
 /**
  * Get unviewed alert count for a user
+ * Uses Redis caching to minimize database queries
  */
 const getUnviewedAlertCount = async (userId) => {
   // If no userId provided, return 0
@@ -264,17 +281,51 @@ const getUnviewedAlertCount = async (userId) => {
     return 0;
   }
 
+  const cacheKey = `alert:count:${userId}`;
+
+  // Try to get cached count first
+  try {
+    const cached = await redis.get(cacheKey);
+    if (cached !== null) {
+      return parseInt(cached, 10);
+    }
+  } catch (cacheError) {
+    console.warn("Cache unavailable for alert count:", cacheError.message);
+  }
+
   const count = await prisma.alert.count({
     where: {
       NOT: {
         viewedByUsers: {
           has: userId,
+          invalidateAlertCountCache,
         },
       },
     },
   });
 
+  // Cache the count for 30 seconds
+  try {
+    await redis.setex(cacheKey, ALERT_COUNT_CACHE_TTL, count.toString());
+  } catch (cacheError) {
+    console.warn("Failed to cache alert count:", cacheError.message);
+  }
+
   return count;
+};
+
+/**
+ * Invalidate alert count cache for a user
+ * Call this when alerts are created or marked as viewed
+ */
+const invalidateAlertCountCache = async (userId) => {
+  if (!userId) return;
+
+  try {
+    await redis.del(`alert:count:${userId}`);
+  } catch (error) {
+    console.warn("Failed to invalidate alert count cache:", error.message);
+  }
 };
 
 export {
