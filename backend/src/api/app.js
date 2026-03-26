@@ -1,6 +1,7 @@
 import cors from "cors";
 import express from "express";
 import helmet from "helmet";
+import prisma from "../config/database.js";
 import apiRoutes from "./routes/index.js";
 
 const app = express();
@@ -65,13 +66,48 @@ app.use((req, res, next) => {
 app.use("/api", apiRoutes);
 
 // Health check endpoint
-app.get("/health", (req, res) => {
-  res.json({
+app.get("/health", async (req, res) => {
+  const healthcheck = {
     status: "healthy",
     timestamp: new Date().toISOString(),
     uptime: process.uptime(),
     environment: process.env.NODE_ENV || "development",
-  });
+    services: {
+      database: "unknown",
+      redis: "unknown",
+    },
+    errors: [],
+  };
+
+  // Check if DATABASE_URL is configured
+  if (!process.env.DATABASE_URL) {
+    healthcheck.status = "unhealthy";
+    healthcheck.services.database = "not_configured";
+    healthcheck.errors.push("DATABASE_URL environment variable not set");
+  } else {
+    // Check database connection
+    try {
+      await prisma.$queryRaw`SELECT 1`;
+      healthcheck.services.database = "connected";
+    } catch (error) {
+      healthcheck.services.database = "disconnected";
+      healthcheck.status = "degraded";
+      healthcheck.errors.push(`Database error: ${error.message}`);
+    }
+  }
+
+  // Check Redis connection
+  try {
+    const { redis } = await import("../config/redis.js");
+    await redis.ping();
+    healthcheck.services.redis = "connected";
+  } catch (error) {
+    healthcheck.services.redis = "disconnected";
+    // Redis is optional, don't mark as degraded
+  }
+
+  const statusCode = healthcheck.status === "healthy" ? 200 : 503;
+  res.status(statusCode).json(healthcheck);
 });
 
 // 404 handler
