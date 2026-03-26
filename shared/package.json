@@ -1,0 +1,11 @@
+{
+  "name": "shared",
+  "version": "1.0.0",
+  "description": "Shared utilities for DukaanSync platform",
+  "type": "module",
+  "main": "./api-client/index.js",
+  "private": true,
+  "dependencies": {
+    "axios": "^1.6.8"
+  }
+}

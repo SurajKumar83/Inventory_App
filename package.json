@@ -8,7 +8,7 @@
     "admin-web",
     "mobile",
     "storefront",
-    "shared/*"
+    "shared"
   ],
   "scripts": {
     "dev:backend": "npm run dev --workspace=backend",
